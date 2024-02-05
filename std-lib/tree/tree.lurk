@@ -1,0 +1,162 @@
+!(:load "../list/list.lurk")
+!(:load "../safe-arith/safe-arith.lurk")
+
+;; trees are nested (cons _ _) expressions, where:
+;; - a LEAF with value val is of the form (cons nil val)
+;; - a BRANCH is of the form (cons br1 br2), br1 and br2 either a branch or a leaf
+
+(letrec 
+    ;; a leaf has the form (cons val nil)
+    ((make-leaf (lambda (val) 
+        (cons nil val)))
+
+    ;; tree-search, depth first
+    (tree-search (lambda (val tree)
+        (if (car tree) 
+            (if (tree-search val (car tree))
+                t
+                (tree-search val (cdr tree)))
+            (= val (cdr tree)))))
+
+    ;; tree-search, breadth first 
+    (tree-search2-iter (lambda (val tree-list accum)
+        (if (caar tree-list)
+            ;; it is not a leaf, and also not the end of tree-list
+            (tree-search2-iter 
+                val 
+                (cdr tree-list)
+                (snoc (caar tree-list) (snoc (cdar tree-list) accum)))
+            ;; it is either a leaf or the end of tree-list
+            (if (cdar tree-list)
+                ;; it is a leaf with value (cdar tree-list)
+                (if (= val (cdar tree-list))
+                    t
+                    (tree-search2-iter val (cdr tree-list) accum))
+                ;; then it is NOT a leaf, but the end of tree-list
+                (if accum
+                    ;; iterate
+                    (tree-search2-iter val accum nil)
+                    ;; we're done, since there's nothing left to search
+                    nil)))))
+    (tree-search2 (lambda (val tree) 
+        (tree-search2-iter val (cons tree nil) nil)))
+        
+    (replace-subtree (lambda (new_tree lr tree) 
+        (if lr
+            (cons new_tree (cdr tree))
+            (cons (car tree) new_tree))))
+
+    ;; takes a tree and returns a list of its leaf values
+    (tree-to-list-iter (lambda (tree-decompose accum)
+        (if tree-decompose
+            ;; there are still things to iterate through
+            (if (caar tree-decompose)
+                ;; not a leaf
+                (tree-to-list-iter 
+                    (snoc (caar tree-decompose) (snoc (cdar tree-decompose) (cdr tree-decompose))) 
+                    accum)
+                ;; it is a leaf
+                (tree-to-list-iter 
+                    (cdr tree-decompose)
+                    (cons (cdar tree-decompose) accum)))
+            ;; we're done iterating and accum is a list of all the leaf values
+            accum)))
+    (tree-to-list (lambda (tree) 
+        (tree-to-list-iter (cons tree nil) nil)))
+                
+    ;; creates a balanced tree out of a list 
+    (pairing (lambda (accum list)
+        (if list
+            (pairing (cons (cons (car list) (cadr list)) accum) (cddr list))
+            (reverse accum))))
+    (list-to-tree-iter (lambda (tlist) 
+        (if (cdr tlist)
+            ;; not done 
+            (if (= 0 (- 7 (* 2 (ceil-int-div (length tlist) 2))))
+                ;; tlist is even 
+                (list-to-tree-iter (pairing nil tlist))
+                ;; tlist is odd
+                (list-to-tree-iter
+                    (pairing nil (snoc (cons (car tlist) (cadr tlist)) (cddr tlist)))))
+            ;; only one thing left in the list, which is our balanced tree 
+            (car tlist))))
+    (list-to-tree (lambda (list) 
+        (list-to-tree-iter
+            (map make-leaf list))))
+
+    ;; adds a subtree at the shallowest leaf 
+    (add-at-leaf-iter (lambda (subtree tree-list accum done)
+        (if (caar tree-list)
+            ;; it is not a leaf, and also not the end of tree-list
+            (add-at-leaf-iter
+                subtree 
+                (cdr tree-list)
+                (snoc (caar tree-list) (snoc (cdar tree-list) accum))
+                done)
+            ;; it is either a leaf or the end of tree-list
+            (if (cdar tree-list)
+                ;; it is a leaf with value (cdar tree-list)
+                (if done 
+                    ;; simply iterate 
+                    (add-at-leaf-iter
+                        subtree 
+                        (cdr tree-list)
+                        (snoc (car tree-list) accum)
+                        done)
+                    ;; insert tree 
+                    (add-at-leaf-iter
+                        subtree 
+                        (cdr tree-list)
+                        (snoc 
+                            (cons (car tree-list) subtree)
+                            accum)
+                        t))
+                ;; then it is NOT a leaf, but the end of tree-list
+                (if accum
+                    ;; check if we're finished
+                    (if done
+                        (list-to-tree accum)
+                        (add-at-leaf-iter subtree accum nil done))
+                    ;; we're done, since there's nothing left to search
+                    nil)))))
+    (add-at-leaf (lambda (subtree tree) 
+        (add-at-leaf-iter subtree (cons tree nil) nil nil)))
+        
+        
+    ;; removes a leaf from the tree at the shallowest leaf with that value 
+    (remove-leaf-iter (lambda (val tree-list accum done)
+        (if (caar tree-list)
+            ;; it is not a leaf, and also not the end of tree-list
+            (remove-leaf-iter
+                val 
+                (cdr tree-list)
+                (snoc (caar tree-list) (snoc (cdar tree-list) accum))
+                done)
+            ;; it is either a leaf or the end of tree-list
+            (if (cdar tree-list)
+                ;; it is a leaf with value (cdar tree-list)
+                (if done 
+                    ;; simply iterate 
+                    (remove-leaf-iter
+                        val 
+                        (cdr tree-list)
+                        (snoc (car tree-list) accum)
+                        done)
+                    ;; remove leaf by just dropping it
+                    (remove-leaf-iter
+                        val
+                        (cdr tree-list)
+                        accum
+                        t))
+                ;; then it is NOT a leaf, but the end of tree-list
+                (if accum
+                    ;; check if we're finished
+                    (if done
+                        (list-to-tree accum)
+                        (remove-leaf-iter val accum nil done))
+                    ;; we're done, since there's nothing left to search
+                    nil)))))
+    (remove-leaf (lambda (val tree) 
+        (remove-leaf-iter val (cons tree nil) nil nil))))
+
+    (current-env))

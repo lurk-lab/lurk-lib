@@ -1,0 +1,16 @@
+;; some boolean operations 
+
+;; negate a boolean
+(let ((bool-neg (lambda (x) (if x nil T)))) (current-env))
+
+;; not equal 
+(let ((neq (lambda (x y) (bool-neg (eq x y))))) (current-env))
+
+;; logical and 
+(let ((and (lambda (x y) (if x (if y T))))) (current-env))
+
+;; logical or
+(let ((or  (lambda (x y) (if x t (if y T))))) (current-env))
+
+;; logical not
+(let ((not (lambda (b) (if b nil T)))) (current-env))

@@ -1,0 +1,31 @@
+;; !(:load "../list/list.lurk")
+
+;; some operations on tables 
+
+;; create a table 
+(letrec 
+    ((create-table (lambda (rows cols)
+        (fold
+            (lambda (accum l) (list-update l (list-n rows) accum))
+            (list-n cols)
+            (numbered-list-n (- cols 1))))))
+    (current-env))
+
+;; update a table 
+(letrec ((table-update (lambda (value row col table)
+        (list-update
+            col 
+            (list-update 
+                row
+                value
+                (list-get col table)) 
+            table)))) 
+    (current-env))
+
+;; retrieve a value in a table 
+;;    list-get place list
+(letrec ((table-get (lambda (row col table)
+        (list-get 
+            row
+            (list-get col table)))))
+    (current-env))

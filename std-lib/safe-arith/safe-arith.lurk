@@ -1,0 +1,113 @@
+;; Arithmetic operations that take into account that arithmetic in Lurk 
+;; is done over a finite field Z mod p.
+;; These functions model arithmetic in Z. 
+
+;; Since Lurk uses a finite field for arithmetic, arithmetic doesn't 
+;; always function as we might expect it to
+;; In particular, it is possible for the product or the sum of two 
+;; positive integers to be negative
+
+;; here we implement "safe" integer arithmetic, which is:
+;; integer arithmetic which evaluates correctly when it behaves like 
+;; normal integer arithmetic, but evaluates to `nil` when it 
+;; behaves oddly due to us using a finite field
+
+;; a simple function to switch from negative to positive and visa versa
+(let ((neg (lambda (n) (- 0 n)))) (current-env))
+
+;; safe-add and safe-subtract make addition behave as in the integers
+(let ((safe-add (lambda (a b)
+    (if (< a 0)
+        (if (< b 0)
+            ;; the sum of two negatives should be negative
+            (if (< (+ a b) 0)
+                ;; the sum of a positive and negative is safe 
+                (+ a b))
+            (+ a b))
+        (if (< b 0)
+            ;; the sum of a positive and negative is safe 
+            (+ a b)
+            ;; the sum of two positives should be positive
+            (if (>= (+ a b) 0)
+                (+ a b)))))))
+    (current-env))
+
+(let ((safe-sub (lambda (a b)
+    (if (< a 0)
+        (if (< b 0)
+            ;; the difference of two negatives is safe
+            (- a b)
+            ;; the difference of `a` negative and `b` nonnegative 
+            ;; should be negative 
+            (if (< (- a b) 0)
+                (- a b)))
+        (if (< b 0)
+            ;; the difference of `a` nonnegative and `b` negative
+            ;; should be nonnegative
+            (if (>= (- a b) 0)
+                (- a b))
+            ;; the difference of `a` nonnegative and `b` nonnegative is safe
+            (- a b))))))
+    (current-env))
+
+;; safe-mult makes multiplication behave as in the integers
+(let ((safe-mult (lambda (a b)
+    (if (< a 0)
+        (if (< b 0)
+            ;; the product of two negatives is positive 
+            (if (> ( * a b) 0)
+                ( * a b))
+            ;; the product of a negative and nonnegative is nonpositive
+            (if (<= ( * a b) 0)
+                ( * a b)))
+        (if (< b 0)
+            ;; the product of a nonnegative and a negative is nonpositive
+            (if (<= ( * a b) 0)
+                ( * a b))
+            ;; the product of two nonnegatives is nonnegative
+            (if (>= ( * a b) 0)
+                ( * a b)))))))
+    (current-env))
+
+;; integer division, where division by 0 results in 0
+;; first an auxiliary function `quot`
+(letrec 
+    ((quot-iter (lambda (a b q) 
+        (if (< a b) 
+            (quot-iter b a 0)
+            (if (< (* b (+ q 1)) 0)
+                q
+                (if (> (* b (+ q 1)) a)
+                    q 
+                    (quot-iter a b (+ q 1)))))))
+    (quot (lambda (a b)
+        (if (< a 0)
+            (quot (- 0 a) b)
+            (if (< b 0)
+                (quot a (- 0 b))
+                (quot-iter a b 0))))))
+    (current-env))
+
+;; integer division that rounds down
+(letrec ((floor-int-div 
+    (lambda (a b) 
+        (if (= b 0) 0
+        (if (< a 0) (- 0 (floor-int-div (- 0 a) b))
+        (if (< b 0) (- 0 (floor-int-div a (- 0 b)))
+            (if (< a b) 0
+            (quot a b))))))))
+    (current-env))
+
+;; integer division that rounds up
+(letrec ((ceil-int-div 
+    (lambda (a b) 
+        (if (= b 0) 0
+        (if (< a 0) (- 0 (ceil-int-div (- 0 a) b))
+        (if (< b 0) (- 0 (ceil-int-div a (- 0 b)))
+            (if (< a b) 1
+            (+ 1 (quot a b)))))))))
+    (current-env))
+
+
+;; safe integer square 
+(let ((safe-square (lambda (x) (safe-mult x x)))) (current-env))

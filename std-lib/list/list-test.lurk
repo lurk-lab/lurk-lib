@@ -1,0 +1,66 @@
+!(:load "../safe-arith/safe-arith.lurk")
+!(:load "../bool/bool.lurk")
+!(:load "list.lurk")
+
+;; test snoc 
+!(:assert-eq '(1 2 3 4) (snoc 4 '(1 2 3)))
+
+;; test reverse 
+!(:assert-eq '(3 2 1) (reverse '(1 2 3)))
+!(:assert-eq '() (reverse '()))
+
+;; test cadr 
+!(:assert-eq 2 (cadr '(1 2 3)))
+
+;; test cddr 
+!(:assert (= 3 (cddr '(1 2 3))))
+
+;; test list-n 
+!(:assert-eq '(nil nil) (list-n 2))
+!(:assert-eq 10 (length (list-n 10)))
+
+;; test numbered-list-n 
+!(:assert-eq '(0 1 2 3) (numbered-list-n 3))
+!(:assert-eq 11 (length (numbered-list-n 10)))
+
+;; test nth 
+!(:assert-eq 4 (nth 2 '(1 2 4 3)))
+
+;; test last 
+!(:assert-eq 3 (last '(1 2 3)))
+
+;; test list-update
+!(:assert-eq '(1 2 3) (list-update 1 2 '(1 1 3)))
+
+;; test length 
+!(:assert-eq 3 (length '(1 2 3)))
+!(:assert-eq 0 (length '()))
+
+;; test apply1
+!(:assert-eq 7 (apply1 (lambda (x y) (+ x y)) '(3 4)))
+!(:assert-eq 7 (apply1 (lambda () 7) '()))
+
+;; test map 
+!(:assert-eq '(2 4 6) (map (lambda (x) (* 2 x)) '(1 2 3)))
+!(:assert-eq '() (map (lambda (x) (* 2 x)) '()))
+
+;; test fold 
+!(:assert-eq 6 (fold (lambda (x y) (+ x y)) 0 '(1 2 3)))
+!(:assert-eq 0 (fold (lambda (x y) (+ x y)) 0 '()))
+
+;; test concat 
+!(:assert-eq '(1 2 3 4) (concat '(1 2) '(3 4)))
+!(:assert-eq '(1 2 3 4) (concat '() '(1 2 3 4)))
+!(:assert-eq '(1 2 3 4) (concat '(1 2 3 4) '()))
+
+;; test take
+!(:assert-eq '(1 2 3) (take 3 '(1 2 3 4 5)))
+!(:assert-eq '() (take 0 '(1 2 3 4 5)))
+!(:assert-eq '(1 2 3) (take 5 '(1 2 3)))
+
+;; test drop
+!(:assert-eq '(3 4 5) (drop 2 '(1 2 3 4 5)))
+!(:assert-eq '() (drop 6 '(1 2 3 4 5)))
+
+;; test filter
+!(:assert-eq '(3 4 5) (filter (lambda (x) (> x 2)) '(1 2 3 4 0 5)))

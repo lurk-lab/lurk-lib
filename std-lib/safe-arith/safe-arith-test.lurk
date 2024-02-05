@@ -1,0 +1,28 @@
+!(:load "safe-arith.lurk")
+
+;; tests for neg 
+!(:assert-eq 0 (neg 0))
+!(:assert-eq 10 (neg (- 0 10)))
+!(:assert-eq (- 0 10) (neg 10))
+
+;; tests for safe-add 
+!(:assert-eq (+ 10 (neg 43)) (safe-add 10 (neg 43)))
+!(:assert-eq (+ (neg 111) 321) (safe-add (neg 111) 321))
+!(:assert-eq (+ 11 5443225) (safe-add 11 5443225))
+!(:assert-eq (+ (neg 5443225) (neg 43)) (safe-add (neg 5443225) (neg 43)))
+
+;; tests for safe-sub 
+
+
+
+;; tests for safe-mult 
+
+
+
+;; tests for floor-int-div 
+
+
+
+;; tests for ceil-int-div 
+
+

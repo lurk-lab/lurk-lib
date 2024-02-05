@@ -1,0 +1,28 @@
+!(:load "../tree/tree.lurk")
+
+;; a set is implemented as a (balanced) binary tree
+
+(letrec
+    ;; get a set from a list 
+    ((list-to-set (lambda (list) (list-to-tree list)))
+    
+    ;; get a list from a set 
+    ((set-to-list (lambda (set) (tree-to-list set))))
+
+    ;; lookup
+    (set-lookup (lambda (val set)
+        (tree-search val tree)))
+
+    ;; add : add an element to a set 
+    (set-add (labmda (val set)
+        (if (tree-search val set)
+            set
+            (add-at-leaf (make-leaf val) set))))
+    
+    ;; remove : remove an element from a set 
+    (set-remove (lambda (val set)
+        (if (tree-search val set)
+            (remove-leaf val set)
+            set))))
+
+    (current-env))

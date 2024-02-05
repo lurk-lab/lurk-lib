@@ -1,0 +1,157 @@
+;; !(:load "../bool/bool.lurk")
+
+;; a l is of the form (cons a (cons b (cons ... (cons nil)...)))
+
+;; snoc : appends to the right-hand side of a l (opposite of cons)
+(letrec 
+    ((snoc-iter (lambda (old-l new-l) 
+        (if (car old-l)
+            (snoc-iter (cdr old-l) (cons (car old-l) new-l))
+            new-l)))
+    (snoc (lambda (x l) (snoc-iter (snoc-iter l '()) (cons x nil))))) 
+    (current-env))
+
+;; reverse : reverses the order of a l 
+(letrec 
+    ((reverse-iter (lambda (l1 l2) 
+        (if (car l1)
+            (reverse-iter (cdr l1) (cons (car l1) l2))
+            l2))) 
+    (reverse (lambda (l) (reverse-iter l nil)))) 
+    (current-env))
+
+;; cxxxr combinations (up to 3) 
+(let ((cadr (lambda (l) (car (cdr l))))
+      (caar (lambda (l) (car (car l))))
+      (cdar (lambda (l) (cdr (car l))))
+      (cddr (lambda (l) (cdr (cdr l))))
+      (cdddr (lambda (l) (cdr (cdr (cdr l)))))
+      (cddar (lambda (l) (cdr (cdr (car l)))))
+      (cdaar (lambda (l) (cdr (car (car l)))))
+      (cdadr (lambda (l) (cdr (car (cdr l)))))
+      (caaar (lambda (l) (car (car (car l)))))
+      (cadar (lambda (l) (cdr (cdr (car l)))))
+      (caadr (lambda (l) (car (car (cdr l)))))
+      (caddr (lambda (l) (car (cdr (cdr l))))))
+  (current-env))
+
+;; list-n : make an empty l of size n
+(letrec 
+    ((list-n-iter (lambda (n l)
+        (if (= n 0)
+            l
+            (list-n-iter (- n 1) (cons nil l)))))
+    (list-n (lambda (n) (list-n-iter n nil))))
+    (current-env))
+
+;; numbered-list-n : make a numbered l from 0 to n of length (n + 1)
+(letrec 
+    ((numbered-list-iter (lambda (n l) 
+        (if (= n 0)
+            (cons 0 l)
+            (numbered-list-iter (- n 1) (cons n l)))))
+    (numbered-list-n (lambda (n)
+        (numbered-list-iter n nil))))
+    (current-env))
+
+
+;; nth : get the nth (0-indexed) value of a l 
+(letrec ((nth (lambda (n l)
+    (if (car l)
+        (if (= 0 n)
+            (car l)
+            (nth (- n 1) (cdr l)))))))
+    (current-env))
+
+;; last : get the last element of a l
+(let ((last (lambda (l) (car (reverse l))))) (current-env))
+
+;; list-update : update the nth (0-indexed) value of a l 
+;;               if (< (length l) n) then list-update returns 
+;;               an unchanged l
+(letrec 
+    ((list-update-iter (lambda (n value old-l new-l)
+        (if (car old-l)
+            (if (= 0 n)
+                (list-update-iter 
+                    (- n 1) 
+                    nil 
+                    (cdr old-l) 
+                    (snoc value new-l))
+                (list-update-iter
+                    (- n 1)
+                    value 
+                    (cdr old-l)
+                    (snoc (car old-l) new-l)))
+            new-l)))
+    (list-update (lambda (n value l) 
+        (list-update-iter n value l nil)))) 
+    (current-env))
+
+;; length : determines the (0-indexed) length of a l 
+(letrec 
+    ((length-iter (lambda (l ct)
+		    (if l
+			(length-iter (cdr l) (+ 1 ct))
+			ct)))
+     (length (lambda (l) (length-iter l 0))))
+  (current-env))
+
+;; apply : a preliminary version of apply
+(letrec 
+    ((apply1 (lambda (f l)
+               (if l
+		   (if (cdr l)
+                       (apply1 (f (car l)) (cdr l))
+                       (f (car l)))
+		   (f)))))
+  (current-env))
+
+;; map : a l map function 
+;; TODO : map that can take multiple lists
+(letrec ((map (lambda (f l)
+                    (if (eq l nil)
+                        nil
+                        (cons (f (car l))
+                              (map f (cdr l)))))))
+      (current-env))
+
+;; filter : takes a predicate and a l and returns only the items
+;; that match the predicate
+(letrec ((filter (lambda (pred l)
+                   (if l
+                       (if (pred (car l))
+                           (cons (car l) (filter pred (cdr l)))
+                           (filter pred (cdr l)))))))
+  (current-env))
+
+;; fold : a fold function over lists 
+(letrec 
+    ((fold (lambda (f acc l)
+        (if (car l)
+            (fold f (f acc (car l)) (cdr l))
+            acc))))
+    (current-env))
+
+;; concat : concatenates two lists 
+(let ((concat (lambda (a b)
+		(fold (lambda (l i) (cons i l))
+		      b
+		      (reverse a)))))
+    (current-env))
+
+;; drop : drops n items from the front of l l, returning the rest
+(letrec ((drop (lambda (n l)
+                 (if (= n 0)
+                     l
+                     (if l
+                         (drop (- n 1) (cdr l)))))))
+  (current-env))
+
+;; take : takes the first n items from the front of the l l
+(letrec ((take (lambda (n l)
+                 (if (= n 0)
+                     nil
+                     (if l
+                         (cons (car l) (take (- n 1) (cdr l))))))))
+  (current-env))

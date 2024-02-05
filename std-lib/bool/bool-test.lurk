@@ -1,0 +1,29 @@
+!(:load "bool.lurk")
+
+;; test that (bool-neg nil) evaluates to t
+!(:assert (bool-neg nil))
+!(:assert (eq nil (bool-neg t)))
+
+;; four test cases for eq-bool
+!(:assert (eq nil (eq-bool t nil)))
+!(:assert (eq nil (eq-bool nil t)))
+
+;; test that (bool-neg t) evaluates to nil
+!(:assert (eq nil (bool-neg t)))
+
+;; test logical and 
+!(:assert (and t t))
+!(:assert (eq nil (and t nil)))
+!(:assert (eq nil (and nil t)))
+!(:assert (eq nil (and nil nil)))
+
+;; test logical or 
+!(:assert (or t t))
+!(:assert (or t nil))
+!(:assert (or nil t))
+!(:assert (eq nil (or nil nil)))
+
+;; test logical not
+!(:assert-eq nil (not t))
+!(:assert-eq t (not nil))
+!(:assert-eq nil (not 23))

@@ -1,0 +1,37 @@
+!(:load "../list/list.lurk")
+!(:load "../bool/bool.lurk")
+
+;; a map is a list of (key, value) pairs 
+(letrec 
+    ((map-lookup (lambda (map key) 
+        (if map
+            (if (= key (caar map))
+                (cdar map)
+                (map-lookup (cdr map) key))
+            nil)))
+    
+    ;; add a value at a key. 
+    ;; returns an unchanged map if key already exists
+    (map-add (lambda (map key val) 
+        (if (map-lookup map key)
+            map
+            (cons (cons key val) map))))
+    
+    ;; remove the value at a key 
+    (map-remove (lambda (map key)
+        (filter (lambda (x) (neq key (car x))) map)))
+    
+    ;; if val is nil, remove that value 
+    (map-update (lambda (map key val) 
+        (if val
+            (map-add map key val)
+            (map-remove map key))))
+            
+    ;; concatenate maps 
+    (map-concat (lambda (map1 map2) 
+        (fold 
+            (lambda (acc x) (map-add map1 (car x) (cdr x)))
+            map1
+            map2))))
+
+    (current-env)
